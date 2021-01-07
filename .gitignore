@@ -1,18 +1,12 @@
 node_modules
-
-yarn-error.log
-
 .idea
-
 dist
-
-.env
-
-TODO
-
+build/
 tmp
-
-.DS_Store
-
 docker/
 
+yarn-error.log
+.env
+TODO
+.DS_Store
+yarn.lock
