@@ -5,14 +5,17 @@
   "types": "build/src/bot.d.ts",
   "scripts": {
     "start": "node ./build/src/bot.js",
+    "_build": "tsc && truffle compile",
     "build": "tsc",
+    "postbuild": "yarn run copy-files",
+    "copy-files": "cp *.js build",
     "test": "jest",
     "lint": "gts lint",
     "clean": "gts clean",
     "watch": "tsc --watch",
     "fix": "gts fix",
-    "prepare": "npm run build",
-    "pretest": "npm run build"
+    "prepare": "yarn run build",
+    "pretest": "yarn run build"
   },
   "devDependencies": {
     "@types/jest": "^26.0.18",
@@ -23,8 +26,11 @@
     "typescript": "^4.1.2"
   },
   "dependencies": {
+    "@truffle/hdwallet-provider": "^1.2.1",
     "@types/express": "^4.17.9",
+    "dotenv-safe": "^8.2.0",
     "express": "^4.17.1",
-    "js-yaml": "^3.14.1"
+    "js-yaml": "^3.14.1",
+    "web3": "^1.3.1"
   }
 }

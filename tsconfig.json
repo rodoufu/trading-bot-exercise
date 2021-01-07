@@ -3,20 +3,20 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "build",
-    //    "types": ["node"],
     "esModuleInterop": true,
     "declaration": true,
     "strict": true,
+    "allowJs": true
   },
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "build",
+    "build"
   ],
   "files": [
-    "./src/bot.ts",
+    "./src/bot.ts"
   ]
 }

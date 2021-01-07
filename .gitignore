@@ -10,3 +10,4 @@ yarn-error.log
 TODO
 .DS_Store
 yarn.lock
+.secret
