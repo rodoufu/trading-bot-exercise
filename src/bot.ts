@@ -6,7 +6,8 @@ import {
 import {toWei} from "web3-utils";
 
 (async () => {
-	console.log("I'm a trading bot");
+	let logger: any = console;
+	logger.log("I'm a trading bot");
 
 	const uniSwapAddress: string = process.env.UNISWAP_ADDRESS || "";
 	const uniSwapV2Address: string = process.env.UNISWAP_V2_ADDRESS || "";
@@ -18,20 +19,29 @@ import {toWei} from "web3-utils";
 	try {
 		blockchain = new Blockchain();
 
-		console.info(`Latest block is ${await blockchain.web3.eth.getBlockNumber()}`);
+		// logger.info(`Latest block is ${await blockchain.web3.eth.getBlockNumber()}`);
 
 		const sushiSwap = new Router(blockchain, sushiSwapAddress);
 		const uniSwap = new Router(blockchain, uniSwapAddress);
 		const uniSwapV2 = new Router(blockchain, uniSwapV2Address);
 
-		const amountsIn = await uniSwapV2.getAmountsIn(
-			toWei('1', 'ether'),
-			[wEthTokenContractAddress, tokenContractAddress],
-		);
+		// const amountsIn = await uniSwapV2.getAmountsIn(
+		// 	toWei('1', 'ether'),
+		// 	[wEthTokenContractAddress, tokenContractAddress],
+		// );
+		//
+		// logger.info(`Min amount is ${amountsIn}`);
 
-		console.info(`Min amount is ${amountsIn}`);
+		blockchain.onNewBlock((err, data) => {
+			if (err) {
+				logger.error(`Subscribe error`, err.message);
+				throw err;
+			} else {
+				logger.info(`New block: ${JSON.stringify(data)}`);
+			}
+		});
 	} catch (err) {
-		console.error(`Unexpected error: ${err}`);
+		logger.error(`Unexpected error: ${err}`);
 		throw err;
 	} finally {
 		if (blockchain) {

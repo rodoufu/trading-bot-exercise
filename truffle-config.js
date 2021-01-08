@@ -22,7 +22,6 @@ require('dotenv-safe').config({
 });
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-// const infuraKey = "fj4jll3k.....";
 
 const fs = require('fs');
 const mnemonic = fs.readFileSync(".secret").toString().trim();
@@ -31,9 +30,13 @@ if (!walletFrom) {
 	throw "Wallet cannot be empty";
 }
 
-const selectedNetwork = process.env.NETWORK || "";
+const selectedNetwork = process.env.NETWORK;
 if (!selectedNetwork) {
 	throw "Network cannot be empty";
+}
+const infuraProjectId = process.env.INFURA_PROJECT_ID;
+if (!selectedNetwork) {
+	throw "Infura project id cannot be empty";
 }
 
 module.exports = {
@@ -89,9 +92,19 @@ module.exports = {
 		// }
 
 		rskTestnet: {
-			// host: "https://public-node.testnet.rsk.co",
 			provider: () => new HDWalletProvider(mnemonic, `https://public-node.testnet.rsk.co`),
 			network_id: 31,
+			websockets: true,
+			from: walletFrom,
+		},
+		kovan: {
+			provider: () => new HDWalletProvider(mnemonic, `wss://kovan.infura.io/ws/v3/${infuraProjectId}`),
+			network_id: 42,
+			from: walletFrom,
+		},
+		kovanWs: {
+			host: `wss://kovan.infura.io/ws/v3/${infuraProjectId}`,
+			network_id: 42,
 			websockets: true,
 			from: walletFrom,
 		}
@@ -121,5 +134,5 @@ module.exports = {
 }
 
 function getSelectedNetwork() {
-	return module.exports.networks[selectedNetwork];
+	return [module.exports.networks[selectedNetwork], module.exports.networks[`${selectedNetwork}Ws`]];
 }

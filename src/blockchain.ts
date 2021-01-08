@@ -1,14 +1,7 @@
 import Web3 from "web3";
-import {
-	AbstractProvider,
-	HttpProvider,
-	IpcProvider,
-	provider,
-	WebsocketProvider
-} from "web3-core";
+import {provider} from "web3-core";
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-// import HDWalletProvider from '@truffle/hdwallet-provider';
 
 const IRouterDescriptor = require("../contracts/IRouter.json");
 const TraderDescriptor = require("../contracts/Trader.json");
@@ -16,12 +9,43 @@ const TraderDescriptor = require("../contracts/Trader.json");
 const {getNetwork} = require('../truffle-config');
 
 export class Blockchain {
-	web3Provider: provider;
-	web3: Web3;
+	private readonly web3Provider: provider;
+	private readonly wsWeb3Provider?: provider;
+	readonly web3: Web3;
+	private readonly wsWeb3?: Web3;
 
 	constructor() {
-		this.web3Provider = getNetwork().provider();
-		this.web3 = new Web3(this.web3Provider);
+		let getProviderAndWeb3 = (network: any): [provider, Web3] => {
+			let web3Provider: provider;
+			if (network['provider'] !== undefined) {
+				web3Provider = network.provider();
+			} else {
+				web3Provider = new Web3.providers.WebsocketProvider(
+					network.host,
+					{
+						clientConfig: {
+							keepAlive: true,
+							maxReceivedFrameSize: 100000000,
+							maxReceivedMessageSize: 100000000,
+						},
+						reconnect: {
+							auto: true,
+						},
+					}
+				);
+			}
+			return [web3Provider, new Web3(web3Provider)];
+		}
+		const networks: any[] = getNetwork();
+		let providerWeb3 = getProviderAndWeb3(networks[0]);
+		this.web3Provider = providerWeb3[0];
+		this.web3 = providerWeb3[1];
+
+		if (networks[1]) {
+			providerWeb3 = getProviderAndWeb3(networks[1]);
+			this.wsWeb3Provider = providerWeb3[0];
+			this.wsWeb3 = providerWeb3[1];
+		}
 	}
 
 	getRouter(address: string) {
@@ -33,14 +57,31 @@ export class Blockchain {
 	}
 
 	close() {
-		let provider: any = this.web3.currentProvider;
-		if (provider['disconnect'] !== undefined) {
-			provider.disconnect();
-		} else if (provider['connection'] !== undefined) {
-			provider.connection.close();
-		} else if (provider['engine'] !== undefined) {
-			provider.engine.stop();
+		let providers: any[] = [this.web3.currentProvider];
+		if (this.wsWeb3) {
+			providers.push(this.wsWeb3.currentProvider);
 		}
+
+		for (let provider of providers) {
+			if (provider['disconnect'] !== undefined) {
+				provider.disconnect();
+			} else if (provider['connection'] !== undefined) {
+				provider.connection.close();
+			} else if (provider['engine'] !== undefined) {
+				provider.engine.stop();
+			}
+		}
+	}
+
+	subscribe(typeName: string, callback: (err: Error, data: any) => void) {
+		if (this.wsWeb3 === undefined) {
+			throw `No websocket provider present`;
+		}
+		this.wsWeb3.eth.subscribe(typeName as any, callback);
+	}
+
+	onNewBlock(callback: (err: Error, data: any) => void) {
+		this.subscribe('newBlockHeaders', callback);
 	}
 }
 
