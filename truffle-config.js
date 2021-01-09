@@ -20,6 +20,7 @@
 require('dotenv-safe').config({
 	allowEmptyValues: true,
 });
+import {InfuraProvider} from "@ethersproject/providers";
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
@@ -35,8 +36,12 @@ if (!selectedNetwork) {
 	throw "Network cannot be empty";
 }
 const infuraProjectId = process.env.INFURA_PROJECT_ID;
-if (!selectedNetwork) {
+if (!infuraProjectId) {
 	throw "Infura project id cannot be empty";
+}
+const infuraProjectSecret = process.env.INFURA_PROJECT_SECRET;
+if (!infuraProjectSecret) {
+	throw "Infura project secret cannot be empty";
 }
 
 module.exports = {
@@ -142,9 +147,15 @@ module.exports = {
 		}
 	},
 
-	getNetwork: getSelectedNetwork,
-}
+	getNetwork: function () {
+		return [module.exports.networks[selectedNetwork], module.exports.networks[`${selectedNetwork}Ws`]]
+	},
 
-function getSelectedNetwork() {
-	return [module.exports.networks[selectedNetwork], module.exports.networks[`${selectedNetwork}Ws`]];
+	getSwapProvider: function () {
+		const network = module.exports.getNetwork()[0];
+		return new InfuraProvider(network.network_id, {
+			projectId: infuraProjectId,
+			projectSecret: infuraProjectSecret
+		});
+	},
 }
