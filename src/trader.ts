@@ -1,19 +1,22 @@
-import {WETH, ChainId, Token as TokenSushiSwap} from '@sushiswap/sdk'
-import {Token as TokenUniswap} from '@sushiswap/sdk'
+import {WETH, ChainId, Token as TokenSushiSwap, Price} from '@sushiswap/sdk'
 import {Blockchain, RouterContract} from "./blockchain";
 import {getPrice as getPriceSushiswap} from "./sushiswap";
 import {getPrice as getPriceUniswap} from "./uniswap";
 import {TradeDaoInterface} from "./dao";
+import {Fraction} from "@uniswap/sdk";
 
 export class Trader {
 	private readonly blockchain: Blockchain;
 	private readonly logger: any;
 	private readonly tradeDao: TradeDaoInterface;
+	private readonly minimumProfitBps: number;
+	private initiatedTransaction: boolean = false;
 
 	constructor(blockchain: Blockchain, tradeDao: TradeDaoInterface, logger: any = console) {
 		this.blockchain = blockchain;
 		this.logger = logger;
 		this.tradeDao = tradeDao;
+		this.minimumProfitBps = +(process.env.MINIMUM_PROFIT_BPS || "50");
 
 		const uniSwapAddress: string = process.env.UNISWAP_ADDRESS || "";
 		const uniSwapV2Address: string = process.env.UNISWAP_V2_ADDRESS || "";
@@ -44,5 +47,27 @@ export class Trader {
 
 		this.logger.info(`SushiSwap: ${priceSushiSwap.toSignificant(6)}`);
 		this.logger.info(`Uniwap: ${priceUniswap.toSignificant(6)}`);
+		const profit = this.calculateProfitBps(priceUniswap, priceSushiSwap);
+		if (profit > new Fraction(this.minimumProfitBps.toString())) {
+			this.logger.info(`${profit}bps of spread identified`);
+			if (!this.initiatedTransaction) {
+				try {
+					this.initiatedTransaction = true;
+				} finally {
+					this.initiatedTransaction = false;
+				}
+			} else {
+				this.logger.warn(`There is a transaction in progress.`);
+			}
+		} else {
+			this.logger.info(`Not enough spread identified`);
+		}
+	}
+
+	calculateProfitBps(priceBuying: Price, priceSelling: Price): Fraction {
+		const profit = priceSelling.subtract(priceBuying);
+		const profitRatio = profit.divide(priceBuying);
+		// Converting to bases points
+		return profitRatio.multiply("10000");
 	}
 }
