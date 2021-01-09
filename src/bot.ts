@@ -1,51 +1,60 @@
-// import express, {Request, Response} from "express";
-import {
-	Blockchain,
-	Router
-} from "./blockchain";
-import {toWei} from "web3-utils";
+import express, {Request, Response} from "express";
+import {Blockchain} from "./blockchain";
+import {Trader} from "./trader";
+import {Trade, TraderRestServer} from "./server";
+import {InMemoryTradeDao, TradeDaoInterface} from "./dao";
 
 (async () => {
 	let logger: any = console;
 	logger.log("I'm a trading bot");
 
-	const uniSwapAddress: string = process.env.UNISWAP_ADDRESS || "";
-	const uniSwapV2Address: string = process.env.UNISWAP_V2_ADDRESS || "";
-	const sushiSwapAddress: string = process.env.SUSHISWAP_ADDRESS || "";
-	const tokenContractAddress: string = process.env.TOKEN_CONTRACT_ADDRESS || "";
-	const wEthTokenContractAddress: string = process.env.WETH_TOKEN_CONTRACT_ADDRESS || "";
 	let blockchain: Blockchain | null = null;
+	let server: TraderRestServer | null = null;
 
 	try {
 		blockchain = new Blockchain();
+		const tradeDao = new InMemoryTradeDao();
+		const trader = new Trader(blockchain, tradeDao, logger);
+		// TODO Remove these debug trades
+		tradeDao.persist(new Trade(
+			"1", new Date(), "from1", "to1", "fromAmount1", "targetAmount1",
+			"receivedAmount1"
+		));
+		tradeDao.persist(new Trade(
+			"2", new Date(), "from2", "to2", "fromAmount2", "targetAmount2",
+			"receivedAmount2"
+		));
+		server = new TraderRestServer(tradeDao, logger);
 
-		// logger.info(`Latest block is ${await blockchain.web3.eth.getBlockNumber()}`);
-
-		const sushiSwap = new Router(blockchain, sushiSwapAddress);
-		const uniSwap = new Router(blockchain, uniSwapAddress);
-		const uniSwapV2 = new Router(blockchain, uniSwapV2Address);
-
-		// const amountsIn = await uniSwapV2.getAmountsIn(
-		// 	toWei('1', 'ether'),
-		// 	[wEthTokenContractAddress, tokenContractAddress],
-		// );
-		//
-		// logger.info(`Min amount is ${amountsIn}`);
-
-		blockchain.onNewBlock((err, data) => {
+		blockchain.onNewBlock(async (err, data) => {
 			if (err) {
 				logger.error(`Subscribe error`, err.message);
+				if (blockchain) {
+					blockchain.close();
+				}
+				if (server) {
+					server.close();
+				}
 				throw err;
 			} else {
-				logger.info(`New block: ${JSON.stringify(data)}`);
+				try {
+					logger.info(`New block ${JSON.stringify(data.number)}`);
+					await trader.findSpreadAndTrade();
+				} catch (err) {
+					logger.error(`Unexpected error: ${err}`);
+				}
 			}
 		});
+
+		server.start(+(process.env.APP_PORT || "3000"));
 	} catch (err) {
 		logger.error(`Unexpected error: ${err}`);
-		throw err;
-	} finally {
 		if (blockchain) {
 			blockchain.close();
 		}
+		if (server) {
+			server.close();
+		}
+		throw err;
 	}
 })();
