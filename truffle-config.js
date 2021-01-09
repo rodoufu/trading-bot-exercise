@@ -20,11 +20,10 @@
 require('dotenv-safe').config({
 	allowEmptyValues: true,
 });
-import {InfuraProvider} from "@ethersproject/providers";
-
+const {InfuraProvider} = require("@ethersproject/providers");
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-
 const fs = require('fs');
+
 const mnemonic = fs.readFileSync(".secret").toString().trim();
 const walletFrom = process.env.WALLET_FROM;
 if (!walletFrom) {
