@@ -97,6 +97,18 @@ module.exports = {
 			websockets: true,
 			from: walletFrom,
 		},
+
+		mainnet: {
+			provider: () => new HDWalletProvider(mnemonic, `wss://mainnet.infura.io/ws/v3/${infuraProjectId}`),
+			network_id: 1,
+			from: walletFrom,
+		},
+		mainnetWs: {
+			host: `wss://mainnet.infura.io/ws/v3/${infuraProjectId}`,
+			network_id: 1,
+			websockets: true,
+			from: walletFrom,
+		},
 		kovan: {
 			provider: () => new HDWalletProvider(mnemonic, `wss://kovan.infura.io/ws/v3/${infuraProjectId}`),
 			network_id: 42,
