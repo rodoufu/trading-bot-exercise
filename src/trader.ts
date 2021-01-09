@@ -32,10 +32,10 @@ export class Trader {
 		let dai = new TokenSushiSwap(ChainId.MAINNET, daiAddress, daiDecimals);
 
 		let priceSushiSwapPromise = getPriceSushiswap(
-			WETH[dai.chainId], dai, this.blockchain.web3.currentProvider,
+			WETH[dai.chainId], dai, this.blockchain.getRouterSwapProvider(),
 		);
 		let priceUniswapPromise = getPriceUniswap(
-			WETH[dai.chainId], dai, this.blockchain.web3.currentProvider,
+			WETH[dai.chainId], dai, this.blockchain.getRouterSwapProvider(),
 		);
 
 		let prices = await Promise.all([priceSushiSwapPromise, priceUniswapPromise]);

@@ -1,4 +1,3 @@
-import express, {Request, Response} from "express";
 import {Blockchain} from "./blockchain";
 import {Trader} from "./trader";
 import {Trade, TraderRestServer} from "./server";

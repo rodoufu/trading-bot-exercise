@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import {provider} from "web3-core";
 import {BigintIsh} from "@uniswap/sdk";
+import {InfuraProvider} from "@ethersproject/providers";
 
 const IRouterDescriptor = require("../contracts/IRouter.json");
 const TraderDescriptor = require("../contracts/Trader.json");
@@ -10,8 +11,9 @@ const {getNetwork} = require('../truffle-config');
 export class Blockchain {
 	private readonly web3Provider: provider;
 	private readonly wsWeb3Provider?: provider;
-	readonly web3: Web3;
+	private readonly web3: Web3;
 	private readonly wsWeb3?: Web3;
+	private routerSwapProvider: any;
 
 	constructor() {
 		let getProviderAndWeb3 = (network: any): [provider, Web3] => {
@@ -81,6 +83,22 @@ export class Blockchain {
 
 	onNewBlock(callback: any) {
 		this.subscribe('newBlockHeaders', callback);
+	}
+
+	getRouterSwapProvider() {
+		if (this.routerSwapProvider === undefined) {
+			let currentProvider: any = new InfuraProvider('mainnet', {
+				projectId: '60d4f9fef33743aea39e42bec9ae40a8',
+				projectSecret: '532f6530c3ab4035a63aeed45a468316'
+				// 'https://mainnet.infura.io/v3/60d4f9fef33743aea39e42bec9ae40a8'
+			});
+			this.routerSwapProvider = currentProvider;
+			// let currentProvider: any = new Web3.providers.HttpProvider('https://mainnet.infura.io/v3/60d4f9fef33743aea39e42bec9ae40a8');
+			// this.routerSwapProvider = new ethers.providers.Web3Provider(this.web3.currentProvider as ExternalProvider);
+			// this.routerSwapProvider = new ethers.providers.Web3Provider(currentProvider);
+			// this.routerSwapProvider = getSwapProvider();
+		}
+		return this.routerSwapProvider;
 	}
 }
 
