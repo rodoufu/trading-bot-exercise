@@ -1,7 +1,6 @@
 import Web3 from "web3";
 import {provider} from "web3-core";
-
-const HDWalletProvider = require('@truffle/hdwallet-provider');
+import {BigintIsh} from "@uniswap/sdk";
 
 const IRouterDescriptor = require("../contracts/IRouter.json");
 const TraderDescriptor = require("../contracts/Trader.json");
@@ -73,31 +72,31 @@ export class Blockchain {
 		}
 	}
 
-	subscribe(typeName: string, callback: (err: Error, data: any) => void) {
+	subscribe(typeName: string, callback: any) {
 		if (this.wsWeb3 === undefined) {
 			throw `No websocket provider present`;
 		}
 		this.wsWeb3.eth.subscribe(typeName as any, callback);
 	}
 
-	onNewBlock(callback: (err: Error, data: any) => void) {
+	onNewBlock(callback: any) {
 		this.subscribe('newBlockHeaders', callback);
 	}
 }
 
-export class Trader {
+export class TraderContract {
 	contract: any;
 
 	constructor(blockchain: Blockchain, contractAddress: string) {
 		this.contract = blockchain.getTrader(contractAddress);
 	}
 
-	async trade(from: string, to: string, fromAmount: string, targetAmount: string): Promise<string> {
+	async trade(from: string, to: string, fromAmount: BigintIsh, targetAmount: BigintIsh): Promise<string> {
 		return await this.contract.methods.trade(from, to, fromAmount, targetAmount).send();
 	}
 }
 
-export class Router {
+export class RouterContract {
 	contract: any;
 
 	constructor(blockchain: Blockchain, contractAddress: string) {
@@ -105,7 +104,7 @@ export class Router {
 	}
 
 	async swapExactTokensForETH(
-		amountIn: string, amountOutMin: string, callData: string[], to: string, deadline: string,
+		amountIn: BigintIsh, amountOutMin: string, callData: string[], to: string, deadline: BigintIsh,
 	): Promise<string[]> {
 		return await this.contract.methods.swapExactTokensForETH(
 			amountIn, amountOutMin, callData, to, deadline,
@@ -113,7 +112,7 @@ export class Router {
 	}
 
 	async swapExactETHForTokens(
-		amountOutMin: string, callData: string[], to: string, deadline: string,
+		amountOutMin: BigintIsh, callData: string[], to: string, deadline: BigintIsh,
 	): Promise<string[]> {
 		return await this.contract.methods.swapExactETHForTokens(
 			amountOutMin, callData, to, deadline,
