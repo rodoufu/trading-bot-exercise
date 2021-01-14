@@ -1,0 +1,34 @@
+version: '3.7'
+
+services:
+  trader-bot:
+    image: 'trader:latest'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+        max-file: 5
+    hostname: trader-bot
+    environment:
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=trader-db
+      - PGUSER=trader
+      - PGPASSWORD=traderpassword
+    ports:
+    - '3000:3000'
+    secrets:
+      - source: mnemonic
+        target: /app/.secret
+
+  postgres:
+    image: 'postgres:13.1-alpine'
+    hostname: postgres
+    environment:
+      - POSTGRES_DB=trader-db
+      - POSTGRES_USER=trader
+      - POSTGRES_PASSWORD=traderpassword
+
+secrets:
+  mnemonic:
+    file: '.secret'
