@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.8.0;
 
-import "./SwapRouter.sol";
+import "./IRouter.sol";
 
 contract Trader {
 	function trade(address from, address to, uint fromAmount, uint targetAmount) public returns (uint) {

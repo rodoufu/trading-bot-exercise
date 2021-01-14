@@ -5,7 +5,27 @@ import {getPrice as getPriceUniswap} from "./uniswap";
 import {TradeDaoInterface} from "./dao";
 import {Fraction} from "@uniswap/sdk";
 
-export class Trader {
+export interface TraderInterface {
+	findSpreadAndTrade(): Promise<void>;
+
+	calculateProfitBps(priceBuying: Price, priceSelling: Price): Fraction;
+}
+
+export class TraderMath implements TraderInterface {
+	calculateProfitBps(priceBuying: Price, priceSelling: Price): Fraction {
+		const profit = priceSelling.subtract(priceBuying);
+		const profitRatio = profit.divide(priceBuying);
+		// Converting to bases points
+		return profitRatio.multiply("10000");
+	}
+
+	findSpreadAndTrade(): Promise<void> {
+		return Promise.resolve(undefined);
+	}
+
+}
+
+export class Trader extends TraderMath {
 	private readonly blockchain: Blockchain;
 	private readonly logger: any;
 	private readonly tradeDao: TradeDaoInterface;
@@ -13,6 +33,7 @@ export class Trader {
 	private initiatedTransaction: boolean = false;
 
 	constructor(blockchain: Blockchain, tradeDao: TradeDaoInterface, logger: any = console) {
+		super();
 		this.blockchain = blockchain;
 		this.logger = logger;
 		this.tradeDao = tradeDao;
@@ -46,7 +67,7 @@ export class Trader {
 		let priceUniswap = prices[1];
 
 		this.logger.info(`SushiSwap: ${priceSushiSwap.toSignificant(6)}`);
-		this.logger.info(`Uniwap: ${priceUniswap.toSignificant(6)}`);
+		this.logger.info(`Uniswap: ${priceUniswap.toSignificant(6)}`);
 		const profit = this.calculateProfitBps(priceUniswap, priceSushiSwap);
 		if (profit > new Fraction(this.minimumProfitBps.toString())) {
 			this.logger.info(`${profit}bps of spread identified`);
@@ -64,10 +85,4 @@ export class Trader {
 		}
 	}
 
-	calculateProfitBps(priceBuying: Price, priceSelling: Price): Fraction {
-		const profit = priceSelling.subtract(priceBuying);
-		const profitRatio = profit.divide(priceBuying);
-		// Converting to bases points
-		return profitRatio.multiply("10000");
-	}
 }

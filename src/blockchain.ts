@@ -1,9 +1,28 @@
 import Web3 from "web3";
 import {provider} from "web3-core";
 import {BigintIsh} from "@uniswap/sdk";
+import * as fs from "fs";
 
-const IRouterDescriptor = require("../contracts/IRouter.json");
-const TraderDescriptor = require("../contracts/Trader.json");
+/**
+ * It is used cause sometimes the path may change when running jest or from the IDE.
+ * @param name
+ */
+function loadContractJSON(name: string): any {
+	let possiblePaths = [
+		`${__dirname}/../contracts/${name}`,
+		`${__dirname}/../../contracts/${name}`,
+		`${__dirname}/../build/contracts/${name}`,
+	];
+	for (let path of possiblePaths) {
+		if (fs.existsSync(path)) {
+			return require(path);
+		}
+	}
+	throw `File not found at ${JSON.stringify(possiblePaths)}`;
+}
+
+const IRouterDescriptor = loadContractJSON("IRouter.json");
+const TraderDescriptor = loadContractJSON("Trader.json");
 
 const {getNetwork, getSwapProvider} = require('../truffle-config');
 

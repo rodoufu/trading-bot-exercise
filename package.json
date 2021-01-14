@@ -18,12 +18,16 @@
     "pretest": "yarn run build"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.18",
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-typescript": "^7.12.7",
+    "@types/jest": "^26.0.20",
+    "babel-jest": "^26.6.3",
     "eslint": "^7.14.0",
     "gts": "^3.0.2",
     "jest": "^26.6.3",
     "ts-jest": "^26.4.4",
-    "typescript": "^4.1.2"
+    "typescript": "^4.1.3"
   },
   "dependencies": {
     "@ethersproject/contracts": "^5.0.9",
