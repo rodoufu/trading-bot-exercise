@@ -19,11 +19,11 @@ import {InMemoryTradeDao, TradeDaoInterface} from "./dao";
 		trader = new Trader(blockchain, tradeDao, logger);
 
 		// TODO Remove these debug trades
-		tradeDao.persist(new Trade(
+		await tradeDao.persist(new Trade(
 			"1", new Date(), "from1", "to1", "fromAmount1", "targetAmount1",
 			"receivedAmount1"
 		));
-		tradeDao.persist(new Trade(
+		await tradeDao.persist(new Trade(
 			"2", new Date(), "from2", "to2", "fromAmount2", "targetAmount2",
 			"receivedAmount2"
 		));

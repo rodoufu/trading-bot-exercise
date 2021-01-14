@@ -40,17 +40,17 @@ export class TraderRestServer {
 
 		let traderServer = this;
 		this.app.get("/trades", async (req: Request, resp: Response) => {
-			resp.send(traderServer.getTrades());
+			resp.send(await traderServer.getTrades());
 		});
 		this.app.get("/trades/:id", async (req: Request, resp: Response) => {
 			let id: string | null = req.params.id;
-			resp.send(traderServer.getTrades(id));
+			resp.send(await traderServer.getTrades(id));
 		});
 	}
 
-	getTrades(id?: string): Trade[] {
+	async getTrades(id?: string): Promise<Trade[]> {
 		if (id !== undefined) {
-			const trade = this.tradeDao.findById(id);
+			const trade = await this.tradeDao.findById(id);
 			if (trade !== undefined) {
 				return [trade as Trade];
 			} else {
@@ -58,7 +58,7 @@ export class TraderRestServer {
 			}
 		} else {
 			const trades: Trade[] = [];
-			for (let trade of this.tradeDao.findAll()) {
+			for await (let trade of this.tradeDao.findAll()) {
 				trades.push(trade);
 			}
 			return trades;
