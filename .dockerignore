@@ -1,0 +1,12 @@
+build/
+node_modules/
+.idea/
+
+.env
+.secret
+.gitignore
+README.md
+package-lock.json
+yarn-error.log
+yarn.lock
+Dockerfile

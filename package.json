@@ -5,8 +5,7 @@
   "types": "build/src/bot.d.ts",
   "scripts": {
     "start": "node ./build/src/bot.js",
-    "_build": "tsc && truffle compile",
-    "build": "tsc",
+    "build": "tsc && truffle compile",
     "postbuild": "yarn run copy-files",
     "copy-files": "cp *.js build",
     "test": "jest",
