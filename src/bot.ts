@@ -4,6 +4,7 @@ import {Trade, TraderRestServer} from "./server";
 import {InMemoryTradeDao, TradeDaoInterface} from "./dao";
 
 (async () => {
+	// Add a real logger here
 	let logger: any = console;
 	logger.log("I'm a trading bot");
 

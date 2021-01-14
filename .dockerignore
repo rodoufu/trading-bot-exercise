@@ -1,12 +1,14 @@
+.idea/
 build/
 node_modules/
-.idea/
 
 .env
 .secret
 .gitignore
-README.md
+Dockerfile
+Makefile
 package-lock.json
+README.md
+swarm.yaml
 yarn-error.log
 yarn.lock
-Dockerfile

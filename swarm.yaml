@@ -20,6 +20,11 @@ services:
     secrets:
       - source: mnemonic
         target: /app/.secret
+    configs:
+      - source: env_file
+        target: /app/.env
+    depends_on:
+      - postgres
 
   postgres:
     image: 'postgres:13.1-alpine'
@@ -32,3 +37,7 @@ services:
 secrets:
   mnemonic:
     file: '.secret'
+
+configs:
+  env_file:
+    file: '.env'
