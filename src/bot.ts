@@ -1,7 +1,7 @@
 import {Blockchain} from "./blockchain";
 import {Trader, TraderInterface} from "./trader";
-import {Trade, TraderRestServer} from "./server";
-import {InMemoryTradeDao, TradeDaoInterface} from "./dao";
+import {TraderRestServer} from "./server";
+import {PostgresDB, TradeDaoInterface} from "./dao";
 
 (async () => {
 	// Add a real logger here
@@ -13,32 +13,26 @@ import {InMemoryTradeDao, TradeDaoInterface} from "./dao";
 	let trader: TraderInterface | null = null;
 	let tradeDao: TradeDaoInterface | null = null;
 
+	let closeAll = () => {
+		blockchain?.close();
+		server?.close();
+		tradeDao?.close();
+	};
+
 	try {
 		// We could use dependency injection here
 		blockchain = new Blockchain();
-		tradeDao = new InMemoryTradeDao();
+		const postgresDB = new PostgresDB();
+		await postgresDB.create();
+		tradeDao = postgresDB;
 		trader = new Trader(blockchain, tradeDao, logger);
 
-		// TODO Remove these debug trades
-		await tradeDao.persist(new Trade(
-			"1", new Date(), "from1", "to1", "fromAmount1", "targetAmount1",
-			"receivedAmount1"
-		));
-		await tradeDao.persist(new Trade(
-			"2", new Date(), "from2", "to2", "fromAmount2", "targetAmount2",
-			"receivedAmount2"
-		));
 		server = new TraderRestServer(tradeDao, logger);
 
 		blockchain.onNewBlock(async (err, data) => {
 			if (err) {
 				logger.error(`Subscribe error`, err.message);
-				if (blockchain) {
-					blockchain.close();
-				}
-				if (server) {
-					server.close();
-				}
+				closeAll();
 				throw err;
 			} else {
 				try {
@@ -47,6 +41,7 @@ import {InMemoryTradeDao, TradeDaoInterface} from "./dao";
 						await trader.findSpreadAndTrade();
 					} else {
 						logger.error(`Trader should not be null`);
+						closeAll();
 						process.exit(1);
 					}
 				} catch (err) {
@@ -58,12 +53,7 @@ import {InMemoryTradeDao, TradeDaoInterface} from "./dao";
 		server.start(+(process.env.APP_PORT || "3000"));
 	} catch (err) {
 		logger.error(`Unexpected error: ${err}`);
-		if (blockchain) {
-			blockchain.close();
-		}
-		if (server) {
-			server.close();
-		}
+		closeAll();
 		throw err;
 	}
 })();

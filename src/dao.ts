@@ -76,7 +76,7 @@ export class PostgresDB implements TradeDaoInterface {
 	}
 
 	async* findAll(): AsyncGenerator<Trade> {
-		const query = `select id, createdAt, "from", "to", fromAmount, targetAmount, receivedAmount
+		const query = `select "id", "createdAt", "from", "to", "fromAmount", "targetAmount", "receivedAmount"
                        from public.trades t`;
 		const respQuery = await this.pool.query(query, []);
 		for (let line of respQuery.rows) {
@@ -87,7 +87,7 @@ export class PostgresDB implements TradeDaoInterface {
 	}
 
 	async findById(id: string): Promise<Trade | null> {
-		const query = `select id, createdAt, "from", "to", fromAmount, targetAmount, receivedAmount
+		const query = `select "id", "createdAt", "from", "to", "fromAmount", "targetAmount", "receivedAmount"
                        from public.trades t
                        where id = $1`;
 		const respQuery = await this.pool.query(query, [id]);
@@ -105,7 +105,8 @@ export class PostgresDB implements TradeDaoInterface {
 		try {
 			await client.query('BEGIN');
 
-			const query = `INSERT INTO public.trades(id, createdAt, "from", "to", fromAmount, targetAmount, receivedAmount)
+			const query = `INSERT INTO public.trades("id", "createdAt", "from", "to", "fromAmount", "targetAmount",
+                                                     "receivedAmount")
                            VALUES ($1, $2, $3, $4, $5, $6, $7)`;
 
 			const resp = await this.pool.query(
@@ -138,8 +139,8 @@ export class PostgresDB implements TradeDaoInterface {
 		}
 		const queryCreateDb = `CREATE TABLE public.trades
                                (
-                                   id               int         NOT NULL,
-                                   createdAt        timestamptz NOT NULL,
+                                   "id"             int         NOT NULL,
+                                   "createdAt"      timestamptz NOT NULL,
                                    "from"           varchar     NOT NULL,
                                    "to"             varchar     NOT NULL,
                                    "fromAmount"     varchar     NOT NULL,
