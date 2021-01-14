@@ -11,21 +11,7 @@ export interface TraderInterface {
 	calculateProfitBps(priceBuying: Price, priceSelling: Price): Fraction;
 }
 
-export class TraderMath implements TraderInterface {
-	calculateProfitBps(priceBuying: Price, priceSelling: Price): Fraction {
-		const profit = priceSelling.subtract(priceBuying);
-		const profitRatio = profit.divide(priceBuying);
-		// Converting to bases points
-		return profitRatio.multiply("10000");
-	}
-
-	findSpreadAndTrade(): Promise<void> {
-		return Promise.resolve(undefined);
-	}
-
-}
-
-export class Trader extends TraderMath {
+export class Trader implements TraderInterface {
 	private readonly blockchain: Blockchain;
 	private readonly logger: any;
 	private readonly tradeDao: TradeDaoInterface;
@@ -33,7 +19,6 @@ export class Trader extends TraderMath {
 	private initiatedTransaction: boolean = false;
 
 	constructor(blockchain: Blockchain, tradeDao: TradeDaoInterface, logger: any = console) {
-		super();
 		this.blockchain = blockchain;
 		this.logger = logger;
 		this.tradeDao = tradeDao;
@@ -83,6 +68,13 @@ export class Trader extends TraderMath {
 		} else {
 			this.logger.info(`Not enough spread identified`);
 		}
+	}
+
+	calculateProfitBps(priceBuying: Price, priceSelling: Price): Fraction {
+		const profit = priceSelling.subtract(priceBuying);
+		const profitRatio = profit.divide(priceBuying);
+		// Converting to bases points
+		return profitRatio.multiply("10000");
 	}
 
 }
