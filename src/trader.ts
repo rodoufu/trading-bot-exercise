@@ -1,4 +1,4 @@
-import {WETH, ChainId, Token as TokenSushiSwap, Price} from '@sushiswap/sdk'
+import {WETH, ChainId, Token, Price} from '@sushiswap/sdk'
 import {Blockchain, RouterContract} from "./blockchain";
 import {getPrice as getPriceSushiswap} from "./sushiswap";
 import {getPrice as getPriceUniswap} from "./uniswap";
@@ -9,6 +9,10 @@ export interface TraderInterface {
 	findSpreadAndTrade(): Promise<void>;
 
 	calculateProfitBps(priceBuying: Price, priceSelling: Price): Fraction;
+
+	getPriceUniswap(token: Token): Promise<Price>;
+
+	getPriceSushiSwap(token: Token): Promise<Price>;
 }
 
 export class Trader implements TraderInterface {
@@ -38,21 +42,17 @@ export class Trader implements TraderInterface {
 	async findSpreadAndTrade() {
 		const daiAddress = '0x6B175474E89094C44Da98b954EedeAC495271d0F';
 		const daiDecimals = 18;
-		let dai = new TokenSushiSwap(ChainId.MAINNET, daiAddress, daiDecimals);
+		let dai = new Token(ChainId.MAINNET, daiAddress, daiDecimals);
 
-		let priceSushiSwapPromise = getPriceSushiswap(
-			WETH[dai.chainId], dai, this.blockchain.getRouterSwapProvider(),
-		);
-		let priceUniswapPromise = getPriceUniswap(
-			WETH[dai.chainId], dai, this.blockchain.getRouterSwapProvider(),
-		);
-
-		let prices = await Promise.all([priceSushiSwapPromise, priceUniswapPromise]);
+		let prices = await Promise.all([
+			this.getPriceSushiSwap(dai),
+			this.getPriceUniswap(dai),
+		]);
 		let priceSushiSwap = prices[0];
 		let priceUniswap = prices[1];
 
-		this.logger.info(`SushiSwap: ${priceSushiSwap.toSignificant(6)}`);
-		this.logger.info(`Uniswap: ${priceUniswap.toSignificant(6)}`);
+		this.logger.info(`SushiSwap price: ${priceSushiSwap.toSignificant(6)}`);
+		this.logger.info(`Uniswap price: ${priceUniswap.toSignificant(6)}`);
 		const profit = this.calculateProfitBps(priceUniswap, priceSushiSwap);
 		if (profit > new Fraction(this.minimumProfitBps.toString())) {
 			this.logger.info(`${profit}bps of spread identified`);
@@ -75,6 +75,18 @@ export class Trader implements TraderInterface {
 		const profitRatio = profit.divide(priceBuying);
 		// Converting to bases points
 		return profitRatio.multiply("10000");
+	}
+
+	async getPriceSushiSwap(token: Token): Promise<Price> {
+		return await getPriceSushiswap(
+			WETH[token.chainId], token, this.blockchain.getRouterSwapProvider(),
+		);
+	}
+
+	async getPriceUniswap(token: Token): Promise<Price> {
+		return await getPriceUniswap(
+			WETH[token.chainId], token, this.blockchain.getRouterSwapProvider(),
+		);
 	}
 
 }

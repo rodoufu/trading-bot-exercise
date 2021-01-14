@@ -131,7 +131,7 @@ export class RouterContract {
 	}
 
 	async swapExactTokensForETH(
-		amountIn: BigintIsh, amountOutMin: string, callData: string[], to: string, deadline: BigintIsh,
+		amountIn: BigintIsh, amountOutMin: BigintIsh, callData: string[], to: string, deadline: BigintIsh,
 	): Promise<string[]> {
 		return await this.contract.methods.swapExactTokensForETH(
 			amountIn, amountOutMin, callData, to, deadline,
@@ -147,10 +147,19 @@ export class RouterContract {
 	}
 
 	async getAmountsIn(
-		amountOut: string, callData: string[],
-	): Promise<string[]> {
+		amountOut: BigintIsh, callData: string[],
+	): Promise<BigintIsh[]> {
 		return await this.contract.methods.getAmountsIn(
 			amountOut, callData,
 		).call();
+	}
+
+	async addLiquidityETH(
+		token: string, amountTokenDesired: BigintIsh, amountTokenMin: BigintIsh, amountETHMin: BigintIsh,
+		address: string, deadline: BigintIsh,
+	): Promise<void> {
+		return await this.contract.methods.addLiquidityETH(
+			token, amountTokenDesired, amountTokenMin, amountETHMin, address, deadline,
+		).send();
 	}
 }
