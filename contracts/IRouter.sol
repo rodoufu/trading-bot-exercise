@@ -2,6 +2,8 @@
 pragma solidity >=0.4.22 <0.8.0;
 
 interface IRouter {
+	function WETH() external pure returns (address);
+
 	function swapExactTokensForETH(
 		uint amountIn,
 		uint amountOutMin,
