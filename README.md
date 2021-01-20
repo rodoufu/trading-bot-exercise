@@ -60,6 +60,6 @@ interface IRouter {
 
 ## Notes
 
-- ETH is expressed in decimals (or Wei), 1 ETH = 1e18 Wei (or 10^18). The same applies to DAI.
-- ETH is represented by the address 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+- ETH is expressed in decimals (or Wei), `1 ETH = 1e18 Wei` (or `10^18`). The same applies to DAI.
+- ETH is represented by the address `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`
 - Uniswap & SushiSwap support WETH only
