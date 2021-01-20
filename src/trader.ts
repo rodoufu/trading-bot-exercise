@@ -20,6 +20,7 @@ export class Trader implements TraderInterface {
 	private readonly logger: any;
 	private readonly tradeDao: TradeDaoInterface;
 	private readonly minimumProfitBps: number;
+	private readonly tradeToken: Token;
 	private initiatedTransaction: boolean = false;
 
 	constructor(blockchain: Blockchain, tradeDao: TradeDaoInterface, logger: any = console) {
@@ -28,25 +29,17 @@ export class Trader implements TraderInterface {
 		this.tradeDao = tradeDao;
 		this.minimumProfitBps = +(process.env.MINIMUM_PROFIT_BPS || "50");
 
-		const uniSwapAddress: string = process.env.UNISWAP_ADDRESS || "";
-		const uniSwapV2Address: string = process.env.UNISWAP_V2_ADDRESS || "";
-		const sushiSwapAddress: string = process.env.SUSHISWAP_ADDRESS || "";
 		const tokenContractAddress: string = process.env.TOKEN_CONTRACT_ADDRESS || "";
-		const wEthTokenContractAddress: string = process.env.WETH_TOKEN_CONTRACT_ADDRESS || "";
+		const tokenContractDecimals = +(process.env.MINIMUM_PROFIT_BPS || "18");
+		const chainId: number = +(process.env.NETWORK || "1");
 
-		const sushiSwap = new RouterContract(blockchain, sushiSwapAddress);
-		const uniSwap = new RouterContract(blockchain, uniSwapAddress);
-		const uniSwapV2 = new RouterContract(blockchain, uniSwapV2Address);
+		this.tradeToken = new Token(chainId, tokenContractAddress, tokenContractDecimals);
 	}
 
 	async findSpreadAndTrade() {
-		const daiAddress = '0x6B175474E89094C44Da98b954EedeAC495271d0F';
-		const daiDecimals = 18;
-		let dai = new Token(ChainId.MAINNET, daiAddress, daiDecimals);
-
 		let prices = await Promise.all([
-			this.getPriceSushiSwap(dai),
-			this.getPriceUniswap(dai),
+			this.getPriceSushiSwap(this.tradeToken),
+			this.getPriceUniswap(this.tradeToken),
 		]);
 		let priceSushiSwap = prices[0];
 		let priceUniswap = prices[1];
@@ -54,7 +47,7 @@ export class Trader implements TraderInterface {
 		this.logger.info(`SushiSwap price: ${priceSushiSwap.toSignificant(6)}`);
 		this.logger.info(`Uniswap price: ${priceUniswap.toSignificant(6)}`);
 		const profit = this.calculateProfitBps(priceUniswap, priceSushiSwap);
-		if (profit > new Fraction(this.minimumProfitBps.toString())) {
+		if (profit.greaterThan(this.minimumProfitBps.toString())) {
 			this.logger.info(`${profit}bps of spread identified`);
 			if (!this.initiatedTransaction) {
 				try {
