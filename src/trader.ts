@@ -1,5 +1,5 @@
-import {WETH, ChainId, Token, Price} from '@sushiswap/sdk'
-import {Blockchain, RouterContract} from "./blockchain";
+import {WETH, Token, Price} from '@sushiswap/sdk'
+import {Blockchain, TraderContract} from "./blockchain";
 import {getPrice as getPriceSushiswap} from "./sushiswap";
 import {getPrice as getPriceUniswap} from "./uniswap";
 import {TradeDaoInterface} from "./dao";
@@ -21,6 +21,7 @@ export class Trader implements TraderInterface {
 	private readonly tradeDao: TradeDaoInterface;
 	private readonly minimumProfitBps: number;
 	private readonly tradeToken: Token;
+	private readonly traderContract: TraderContract;
 	private initiatedTransaction: boolean = false;
 
 	constructor(blockchain: Blockchain, tradeDao: TradeDaoInterface, logger: any = console) {
@@ -30,10 +31,12 @@ export class Trader implements TraderInterface {
 		this.minimumProfitBps = +(process.env.MINIMUM_PROFIT_BPS || "50");
 
 		const tokenContractAddress: string = process.env.TOKEN_CONTRACT_ADDRESS || "";
+		const traderContractAddress: string = process.env.TRADER_CONTRACT_ADDRESS || "";
 		const tokenContractDecimals = +(process.env.MINIMUM_PROFIT_BPS || "18");
 		const chainId: number = +(process.env.NETWORK || "1");
 
 		this.tradeToken = new Token(chainId, tokenContractAddress, tokenContractDecimals);
+		this.traderContract = new TraderContract(blockchain, traderContractAddress);
 	}
 
 	async findSpreadAndTrade() {
@@ -49,6 +52,15 @@ export class Trader implements TraderInterface {
 		const profit = this.calculateProfitBps(priceUniswap, priceSushiSwap);
 		if (profit.greaterThan(this.minimumProfitBps.toString())) {
 			this.logger.info(`${profit}bps of spread identified`);
+			const from = "";
+			const to = "";
+			/// 1000 dai
+			const fromAmount = BigInt("1000000000000000000000");
+			// I'm not sure if the method `toSignificant` is converting to the expeted number of digits
+			const targetAmount = this.calculateTargetAmount(priceUniswap, priceSushiSwap).toSignificant(18);
+			let resp = await this.traderContract.trade(from, to, fromAmount, targetAmount);
+			this.logger.info(`We bought ${resp}`);
+
 			if (!this.initiatedTransaction) {
 				try {
 					this.initiatedTransaction = true;
@@ -68,6 +80,10 @@ export class Trader implements TraderInterface {
 		const profitRatio = profit.divide(priceBuying);
 		// Converting to bases points
 		return profitRatio.multiply("10000");
+	}
+
+	calculateTargetAmount(priceBuying: Price, priceSelling: Price): Fraction {
+		return this.calculateProfitBps(priceBuying, priceSelling).divide("100").add("1").multiply(priceBuying);
 	}
 
 	async getPriceSushiSwap(token: Token): Promise<Price> {
